@@ -122,33 +122,36 @@ export const register: Register = on => {
     }
 
     const { Box, Button, Text } = $.ui.resolve(e)
-    const sep = <Text dimColor> │ </Text>
+    // Spacing comes from Box gaps, never from spaces inside a Text: desktop
+    // draws the band as HTML, where leading and trailing spaces collapse.
     const parts = []
 
     if (u !== null && u.percent !== null) {
       parts.push(
-        <Text key="ctx">
-          <Text color={contextColor(u.percent)}>● </Text>
-          <Text tabular>{u.percent}% contexto</Text>
+        <Box key="ctx" flexDirection="row" alignItems="center" columnGap={1}>
+          <Text color={contextColor(u.percent)}>●</Text>
+          <Text>{u.percent}% contexto</Text>
           {u.tokens !== null ? (
-            <Text dimColor tabular>
-              {' '}
+            <Text dimColor>
               {formatTokens(u.tokens)}/{formatTokens(u.window)}
             </Text>
           ) : null}
-        </Text>,
+        </Box>,
       )
     }
 
     if (g !== null) {
+      const drift = [g.ahead > 0 ? `↑${g.ahead}` : '', g.behind > 0 ? `↓${g.behind}` : ''].filter(Boolean).join(' ')
+
       parts.push(
-        <Text key="git" wrap="truncate-middle">
-          <Text dimColor>⎇ </Text>
-          {g.branch}
-          {g.isDirty ? <Text color="warning">*</Text> : null}
-          {g.ahead > 0 ? <Text dimColor> ↑{g.ahead}</Text> : null}
-          {g.behind > 0 ? <Text dimColor> ↓{g.behind}</Text> : null}
-        </Text>,
+        <Box key="git" flexDirection="row" alignItems="center" columnGap={1}>
+          <Text dimColor>⎇</Text>
+          <Text wrap="truncate-middle">
+            {g.branch}
+            {g.isDirty ? <Text color="warning">*</Text> : null}
+          </Text>
+          {drift !== '' ? <Text dimColor>{drift}</Text> : null}
+        </Box>,
       )
     }
 
@@ -157,25 +160,30 @@ export const register: Register = on => {
       const color = u.fiveHour.percent >= WARN_RATE_AT ? 'error' : u.fiveHour.percent >= 70 ? 'warning' : undefined
 
       parts.push(
-        <Text key="rate">
-          <Text dimColor>5h </Text>
-          <Text color={color} tabular>
-            {u.fiveHour.percent}%
-          </Text>
-          {at ? <Text dimColor> · reset {at}</Text> : null}
-        </Text>,
+        <Box key="rate" flexDirection="row" alignItems="center" columnGap={1}>
+          <Text dimColor>5h</Text>
+          <Text color={color}>{u.fiveHour.percent}%</Text>
+          {at ? <Text dimColor>· reset {at}</Text> : null}
+        </Box>,
       )
     }
 
     const canCompact = hasContext && (u?.percent ?? 0) >= COMPACT_AT && !e.props.isWorking && !isCompacting
 
     return (
-      <Box flexDirection="row" alignItems="center">
-        <Text>
-          {parts.flatMap((p, i) => (i === 0 ? [p] : [sep, p]))}
-        </Text>
+      <Box flexDirection="row" alignItems="center" columnGap={2}>
+        {parts.flatMap((p, i) =>
+          i === 0
+            ? [p]
+            : [
+                <Box key={`sep-${i}`}>
+                  <Text dimColor>│</Text>
+                </Box>,
+                p,
+              ],
+        )}
         {canCompact ? (
-          <Box marginLeft={2}>
+          <Box>
             <Button
               key="compact"
               label="Compactar"

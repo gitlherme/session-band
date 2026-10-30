@@ -1,6 +1,6 @@
 {
   "name": "session-band",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Faixa acima do prompt com contexto, branch e rate limit de 5h",
   "types": "./types/index.d.ts"
 }
